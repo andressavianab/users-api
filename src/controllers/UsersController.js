@@ -52,6 +52,42 @@ class UsersController {
       console.log(err);
     }
   }
+
+  async updateUser(req, res) {
+    const id = req.params.id;
+    const { name, email, role } = req.body;
+
+    try {
+      const user = await User.findById(id);
+      if (!user) {
+        res
+          .status(404)
+          .send({ error: `No user found that matches the id ${id}` });
+      }
+
+      if (email) {
+        const existingEmail = await knex("users").where("email", email).first();
+        if (existingEmail) {
+          return res.status(400).json({ error: "Email alredy exists" });
+        }
+      }
+
+      const updateFields = {
+        name: name || user.name,
+        email: email || user.email,
+        role: role || user.role,
+      };
+
+      const result = await User.update(id, updateFields);
+      if (result.error) {
+        res.status(400).json({ error: result.error });
+      } else {
+        res.status(200).json({ message: result.message });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
 }
 
 module.exports = new UsersController();
